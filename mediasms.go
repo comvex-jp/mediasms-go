@@ -3,56 +3,123 @@ package mediasms
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
-// Client struct
-type Client struct {
-	Username  string
-	Password  string
-	AccountID string
-}
-
-// SendRequest struct
-type SendRequest struct {
-	Smstext       string `json:"smstext"`
-	Smstext2      string `json:"smstext2"`
-	Mobilenumber  string `json:"mobilenumber"`
-	Originalurl   string `json:"originalurl"`
-	Originalurl2  string `json:"originalurl2"`
-	Originalurl3  string `json:"originalurl3"`
-	Originalurl4  string `json:"originalurl4"`
-	Smsid         string `json:"smsid"`
-	Smstitle      string `json:"smstitle"`
-	Status        string `json:"status"`
-	Returnsms     string `json:"returnsms"`
-	Waitreturnsms string `json:"waitreturnsms"`
-	Type          string `json:"type"`
-}
-
-// {field} status_code : Integer
-// {field} name : String
-// {field} description : String
-
-// SendResponse struct
-type SendResponse struct {
+// APIResponse struct
+type APIResponse struct {
 	StatusCode  string
 	Name        string
 	Description string
 }
 
-// SendResultCode from media4u
-type SendResultCode struct {
+// ResultCode from media4u
+type ResultCode struct {
 	Result string `json:"result"`
 }
 
-var resultsMapper = map[string]map[string]string{
+// WebHook from media4u
+type WebHook struct {
+	Mobilenumber      string
+	Status            string
+	Smsid             string
+	Returnsms         string
+	Raitreturnsms     string
+	Returnsmsdatetime string
+	Replyid           string
+	Senderid          string
+}
+
+const smsurl = "https://www.sms-console.jp/"
+
+// Send request to media4u
+func (c Client) Send(messageID string, val SendRequest) (APIResponse, error) {
+	smsID := createSMSID(c.Prefix, messageID)
+
+	val.Smsid = smsID
+
+	jsonValue, _ := json.Marshal(val)
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", smsurl+"api/", bytes.NewBuffer(jsonValue))
+	req.SetBasicAuth(c.Username, c.Password)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var sendResult ResultCode
+	json.Unmarshal(body, &sendResult)
+
+	var res = sendResultsMapper[sendResult.Result]
+
+	results := APIResponse{
+		StatusCode:  sendResult.Result,
+		Name:        res["name"],
+		Description: res["description"],
+	}
+
+	return results, err
+}
+
+// GetStatus of a sent sms
+func (c Client) GetStatus(messageID string) (APIResponse, error) {
+	smsID := createSMSID(c.Prefix, messageID)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", smsurl+"api5/?smsid="+smsID, nil)
+	req.SetBasicAuth(c.Username, c.Password)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	s := string(body)
+	t := strings.Split(s, "\n")
+
+	if t[0] == "200" {
+		results := APIResponse{
+			StatusCode:  "200",
+			Name:        "Success",
+			Description: translationMap[t[1]],
+		}
+		return results, err
+	}
+
+	var getResult ResultCode
+	json.Unmarshal(body, &getResult)
+
+	res := getResultsMapper[getResult.Result]
+
+	results := APIResponse{
+		StatusCode:  getResult.Result,
+		Name:        res["name"],
+		Description: res["description"],
+	}
+
+	return results, err
+}
+
+func createSMSID(prefix, messageID string) string {
+	return prefix + messageID
+}
+
+var sendResultsMapper = map[string]map[string]string{
 	"200": {
 		"name":        "Success code",
-		"description": "success to send SMS",
+		"description": "Sent SMS",
 	},
 	"401": {
 		"name":        "Authentication error",
@@ -115,295 +182,295 @@ var resultsMapper = map[string]map[string]string{
 		"description": "Status is invalid",
 	},
 	"574": {
-		"name": "SMS ID",
+		"name":        "SMS ID",
 		"description": "SMS ID is invalid",
 	},
 	"586": {
-		"name": "SMS text 2 (forSDP)",
+		"name":        "SMS text 2 (forSDP)",
 		"description": "SMS text 2 is invalid",
 	},
 	"587": {
-		"name": "SMS ID is duplicate",
+		"name":        "SMS ID is duplicate",
 		"description": "SMS ID is not unique",
 	},
 	"575": {
-		"name": "Docomo",
+		"name":        "Docomo",
 		"description": "Docomo is invalid",
 	},
 	"576": {
-		"name": "au",
+		"name":        "au",
 		"description": "au is invalid",
 	},
 	"577": {
-		"name": "Soft Bank",
+		"name":        "Soft Bank",
 		"description": "Soft Bank is invalid",
 	},
 	"579": {
-		"name": "Gateway",
+		"name":        "Gateway",
 		"description": "Gateway is invalid",
 	},
 	"562": {
-		"name": "Send date & time",
+		"name":        "Send date & time",
 		"description": "Send date & time is invalid.",
 	},
 	"599": {
-		"name": "Resending is disabled",
+		"name":        "Resending is disabled",
 		"description": "Resending is disabled.",
 	},
 	"571": {
-		"name": "Sending attempts is invalid",
+		"name":        "Sending attempts is invalid",
 		"description": "Sending attempts is invalid.",
 	},
 	"572": {
-		"name": "Resending interval is invalid",
+		"name":        "Resending interval is invalid",
 		"description": "Resending interval is invalid.",
 	},
 	"564": {
-		"name": "Reply ID is invalid",
+		"name":        "Reply ID is invalid",
 		"description": "Reply ID is invalid.",
 	},
 	"566": {
-		"name": "Reply ID doesn't exist",
+		"name":        "Reply ID doesn't exist",
 		"description": "Reply ID doesn't exist.",
 	},
 	"588": {
-		"name": "SMS text for Docomo",
+		"name":        "SMS text for Docomo",
 		"description": "SMS text for Docomo is invalid",
 	},
 	"589": {
-		"name": "SMS text for Softbank",
+		"name":        "SMS text for Softbank",
 		"description": "SMS text for Softbank is invalid",
 	},
 	"598": {
-		"name": "Docomo title",
+		"name":        "Docomo title",
 		"description": "Docomo SMS title is invalid",
 	},
 	"568": {
-		"name": "AU title",
+		"name":        "AU title",
 		"description": "AU SMS title is invalid",
 	},
 	"569": {
-		"name": "Softbank title",
+		"name":        "Softbank title",
 		"description": "Softbank SMS title is invalid",
-	}
+	},
 	"600": {
-		"name": "Keep chatid",
+		"name":        "Keep chatid",
 		"description": "Keep chatid is invalid",
-	}
+	},
 	"601": {
-		"name": "SMS title function is disabled",
+		"name":        "SMS title function is disabled",
 		"description": "SMS title function is disabled",
-	}
+	},
 	"602": {
-		"name": "SIM title",
+		"name":        "SIM title",
 		"description": "SIM SMS title is invalid.",
-	}
+	},
 	"603": {
-		"name": "Reminder delay",
+		"name":        "Reminder delay",
 		"description": "Reminder delay is invalid",
-	}
+	},
 	"604": {
-		"name": "Reminder text",
+		"name":        "Reminder text",
 		"description": "Reminder text is invalid",
-	}
+	},
 	"605": {
 		"name":        "Type",
 		"description": "Invalid type",
 	},
 	"606": {
-		"name": "3rd party API is disabled",
+		"name":        "3rd party API is disabled",
 		"description": "3rd party API is disabled",
-	}
+	},
 	"608": {
-		"name": "Registration date",
+		"name":        "Registration date",
 		"description": "Invalid Registration date",
-	}
+	},
 	"610": {
-		"name": "HLR is disabled",
+		"name":        "HLR is disabled",
 		"description": "HLR is disabled",
-	}
+	},
 	"617": {
-		"name": "Memo is disabled",
+		"name":        "Memo is disabled",
 		"description": "Memo is disabled",
-	}
+	},
 	"612": {
-		"name": "Original URL2",
+		"name":        "Original URL2",
 		"description": "612 Original URL 2 is invalid",
-	}
+	},
 	"613": {
-		"name": "Original URL3",
+		"name":        "Original URL3",
 		"description": "613 Original URL 3 is invalid",
-	}
+	},
 	"614": {
-		"name": "Original URL4",
+		"name":        "Original URL4",
 		"description": "614 Original URL 4 is invalid",
-	}
+	},
 	"615": {
-		"name": "JSON format is incorrect",
+		"name":        "JSON format is incorrect",
 		"description": "615 Incorrect JSON format",
 	},
 	"405": {
-		"name": "Method",
+		"name":        "Method",
 		"description": "405 Method not allowed",
 	},
 	"618": {
-		"name": "Basic SMS text is long for Docomo API",
+		"name":        "Basic SMS text is long for Docomo API",
 		"description": "618 SMS text is long for Docomo API",
 	},
 	"619": {
-		"name": "Basic SMS text is long for SDP",
+		"name":        "Basic SMS text is long for SDP",
 		"description": "619 SMS text is long for SDP",
 	},
 	"620": {
-		"name": "Basic SMS text is long for Softbank API",
+		"name":        "Basic SMS text is long for Softbank API",
 		"description": "620 SMS text is long for Softbank API",
 	},
 	"621": {
-		"name": "Reminder text is long for Docomo API",
+		"name":        "Reminder text is long for Docomo API",
 		"description": "Reminder text is long for Docomo API",
 	},
 	"622": {
-		"name": "Reminder text is long fo SDP",
+		"name":        "Reminder text is long fo SDP",
 		"description": "Reminder text is long for SDP",
 	},
 	"623": {
-		"name": "Reminder text is long for Softbank API",
+		"name":        "Reminder text is long for Softbank API",
 		"description": "Reminder text is long for Softbank API",
 	},
 	"624": {
-		"name": "Duplicated SMSID",
+		"name":        "Duplicated SMSID",
 		"description": "Duplicated SMSID",
 	},
 	"631": {
-		"name": "Resending parameters can not be changed",
+		"name":        "Resending parameters can not be changed",
 		"description": "Resending parameters can not be changed",
 	},
 	"632": {
-		"name": "Rakuten title is invalid",
+		"name":        "Rakuten title is invalid",
 		"description": "Rakuten title is invalid",
 	},
 	"633": {
-		"name": "Rakuten text is invalid",
+		"name":        "Rakuten text is invalid",
 		"description": "Rakuten text is invalid",
 	},
 	"634": {
-		"name": "Main text is too long for Rakuten",
+		"name":        "Main text is too long for Rakuten",
 		"description": "Main text is too long for Rakuten",
 	},
 	"635": {
-		"name": "Reminder text is too long for Rakuten",
+		"name":        "Reminder text is too long for Rakuten",
 		"description": "Reminder text is too long for Rakuten",
 	},
 	"636": {
-		"name": "Rakuten is invalid",
+		"name":        "Rakuten is invalid",
 		"description": "Rakuten is invalid",
 	},
 	"637": {
-		"name": "RCS is disabled",
+		"name":        "RCS is disabled",
 		"description": "RCS is disabled",
 	},
 	"639": {
-		"name": "Original URL code is disabled",
+		"name":        "Original URL code is disabled",
 		"description": "639 Original URL code is disabled",
 	},
 	"640": {
-		"name": "Original URL code",
+		"name":        "Original URL code",
 		"description": "640 Original URL code is invalid",
 	},
 	"641": {
-		"name": "Original URL code 2",
+		"name":        "Original URL code 2",
 		"description": "641 Original URL code 2 is invalid",
 	},
 	"642": {
-		"name": "Original URL code 3",
+		"name":        "Original URL code 3",
 		"description": "642 Original URL code 3 is invalid",
 	},
 	"643": {
-		"name": "Original URL code 4",
+		"name":        "Original URL code 4",
 		"description": "643 Original URL code 4 is invalid",
 	},
-	
-	
-	"": {
-		"name": "",
-		"description": "",
+}
+
+var translationMap = map[string]string{
+	"失敗":              "Failure",
+	"送信済":             "Sent",
+	"送信中":             "Sending",
+	"リダイレクト":         "Redirect from shortened URL to target web sites",
+	"未送信":             "Not send yet",
+	"403":             "Mobile numbers are in the Black list",
+	"au 圏外・OFF":       "Error status from SDP",
+	"au 自 NW 障害":      "Error status from SDP",
+	"au 他 NW 障害":      "Error status from SDP",
+	"au 未払":           "Error status from SDP",
+	"処理中":             "Delivery Pending",
+	"au その他失敗":        "Error status for SDP",
+	"ドコモその他失敗":       "Error status for Docomo API",
+	"ドコモ圏外・OFF":      "Error status for Docomo API",
+	"ドコモ自 NW 障害":     "Error status for Docomo API",
+	"ドコモ他 NW 障害":     "Error status for Docomo API",
+	"無効":              "Invalid records",
+	"ソフトバンクその他失敗":    "Error status for Softbank API",
+	"ソフトバンク圏外・OFF":   "Error status for Softbank API",
+	"ソフトバンク自 NW 障害":  "Error status for Softbank API",
+	"ソフトバンク他 NW 障害":  "Error status for Softbank API",
+	"ソフトバンク受信拒否":     "Error status for Softbank API",
+	"送信不可":            "Error status for HLR API",
+	"送信前":             "SMS is scheduled, but not sent yet",
+	"一時停止":            "CSV file with SMS was paused",
+	"SMS 送信許可時間外":     "SMS was sent out of the allowed time",
+	"双方向 SMS 利用不可":    "No resourse for Reply",
+	"ドコモその他不明":       "Error status for Docomo API",
+	"重複不可":            "Duplicated sms",
+	"送信元重複":           "Keep chatID error",
+	"ドコモ一部受信":        "Error status for Docomo API",
+	"-":               "他人接続判定使用なし",
+	"キャンセル済":          "Cancelled SMS",
+	"送信上限":            "Ovelimitted SMS",
+	"NG ワード":         "Filtered SMS by stop words",
+	"配信停止希望":          "opted out",
+	"長文一部受信":          "Partial delivered via Gate",
+	"承認待ち":            "Wait for confirmation",
+	"Rakuten その他失敗":   "Error status for Rakuten",
+	"Rakuten 他 NW 障害": "Error status for Rakuten",
+	"Rakuten 一部受信":    "Error status for Rakuten",
+	"Rakuten 圏外・OFF":  "Error status for Rakuten",
+}
+
+var getResultsMapper = map[string]map[string]string{
+	"401": {
+		"name":        "Authentication error",
+		"description": "Authorization Required",
 	},
-	
-}
-
-// Send request to media4u
-func (c Client) Send(messageID string, val SendRequest) (SendResponse, error) {
-	smsID := createSMSID(c.AccountID, messageID)
-
-	val.Smsid = smsID
-	val.Status = "1"
-	val.Returnsms = "1"
-	val.Waitreturnsms = "1"
-	val.Type = "sms"
-
-	jsonValue, _ := json.Marshal(val)
-
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", "https://www.sms-console.jp/api/", bytes.NewBuffer(jsonValue))
-	req.SetBasicAuth(c.Username, c.Password)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	var sendResult SendResultCode
-	json.Unmarshal(bodyBytes, &sendResult)
-
-	var res = resultsMapper[sendResult.Result]
-
-	results := SendResponse{
-		StatusCode:  sendResult.Result,
-		Name:        res["name"],
-		Description: res["description"],
-	}
-
-	fmt.Println(results)
-
-	return results, err
-}
-
-// Tasks for today, September 2nd
-// 1. Think about what the responses should be.
-// Likely need to give a proper response with something like
-// { status: 200 } if there are no problems
-// and { status: 401, reason: "explain reason here?" }
-// 2. Response for get status
-// { status: 200: reason: Explain what it is doing? }
-// 3. Cancel function
-
-// GetStatus of a sent sms
-func (c Client) GetStatus(messageID string) (string, error) {
-	smsID := createSMSID(c.AccountID, messageID)
-
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", "https://www.sms-console.jp/api5/?smsid="+smsID, nil)
-	req.SetBasicAuth(c.Username, c.Password)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	bodyText, err := ioutil.ReadAll(resp.Body)
-	s := string(bodyText)
-
-	return s, err
-
-}
-
-func createSMSID(accountID, messageID string) string {
-	return accountID + messageID
+	"414": {
+		"name":        "Failed to send request",
+		"description": "URL is longer than 8,190 bytes",
+	},
+	"503": {
+		"name":        "Temporarily unavailable",
+		"description": "User reached max limit on requests/sec from the single IP address",
+	},
+	"502": {
+		"name":        "Bad gateway",
+		"description": "SMS-CONSOLE completely stopped",
+	},
+	"555": {
+		"name":        "Block IP address",
+		"description": "Your IP adress has been blocked",
+	},
+	"666": {
+		"name":        "Prior to block IP address",
+		"description": "Prior to block IP address",
+	},
+	"574": {
+		"name":        "SMS ID",
+		"description": "SMS ID is invalid",
+	},
+	"587": {
+		"name":        "Not unique SMS ID",
+		"description": "SMS ID is not unique",
+	},
+	"514": {
+		"name":        "SMS doesn't exist",
+		"description": "SMS does not exist",
+	},
 }
