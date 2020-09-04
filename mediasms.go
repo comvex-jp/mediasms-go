@@ -7,59 +7,61 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/comvex-jp/mediasms-go"
 )
 
-// Client struct
-type Client struct {
-	Username string
-	Password string
-	Prefix   string
-}
+// // Client struct
+// type Client struct {
+// 	Username string
+// 	Password string
+// 	Prefix   string
+// }
 
-// SendRequest struct
-type SendRequest struct {
-	Smsid         string `json:"smsid"`
-	Smstitle      string `json:"smstitle"`
-	Smstext       string `json:"smstext"`
-	Mobilenumber  string `json:"mobilenumber"`
-	Originalurl   string `json:"originalurl"`
-	Originalurl2  string `json:"originalurl2"`
-	Originalurl3  string `json:"originalurl3"`
-	Originalurl4  string `json:"originalurl4"`
-	Status        string `json:"status"`
-	Returnsms     string `json:"returnsms"`
-	Waitreturnsms string `json:"waitreturnsms"`
-	Type          string `json:"type"`
-}
+// // SendRequest struct
+// type SendRequest struct {
+// 	Smsid         string `json:"smsid"`
+// 	Smstitle      string `json:"smstitle"`
+// 	Smstext       string `json:"smstext"`
+// 	Mobilenumber  string `json:"mobilenumber"`
+// 	Originalurl   string `json:"originalurl"`
+// 	Originalurl2  string `json:"originalurl2"`
+// 	Originalurl3  string `json:"originalurl3"`
+// 	Originalurl4  string `json:"originalurl4"`
+// 	Status        string `json:"status"`
+// 	Returnsms     string `json:"returnsms"`
+// 	Waitreturnsms string `json:"waitreturnsms"`
+// 	Type          string `json:"type"`
+// }
 
-// APIResponse struct
-type APIResponse struct {
-	StatusCode  string
-	Name        string
-	Description string
-}
+// // apiResponse struct
+// type apiResponse struct {
+// 	StatusCode  string
+// 	Name        string
+// 	Description string
+// }
 
-// ResultCode from media4u
-type ResultCode struct {
+// resultCode from media4u
+type resultCode struct {
 	Result string `json:"result"`
 }
 
-// WebHook from media4u
-type WebHook struct {
-	Mobilenumber      string
-	Status            string
-	Smsid             string
-	Returnsms         string
-	Raitreturnsms     string
-	Returnsmsdatetime string
-	Replyid           string
-	Senderid          string
-}
+// // WebHook from media4u
+// type WebHook struct {
+// 	Mobilenumber      string
+// 	Status            string
+// 	Smsid             string
+// 	Returnsms         string
+// 	Raitreturnsms     string
+// 	Returnsmsdatetime string
+// 	Replyid           string
+// 	Senderid          string
+// }
 
 const smsurl = "https://www.sms-console.jp/"
 
 // Send request to media4u
-func (c Client) Send(messageID string, val SendRequest) (APIResponse, error) {
+func (c mediasms.Client) Send(messageID string, val mediasms.SendRequest) (apiResponse, error) {
 	smsID := createSMSID(c.Prefix, messageID)
 
 	val.Smsid = smsID
@@ -78,12 +80,12 @@ func (c Client) Send(messageID string, val SendRequest) (APIResponse, error) {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	var sendResult ResultCode
+	var sendResult resultCode
 	json.Unmarshal(body, &sendResult)
 
 	var res = sendResultsMapper[sendResult.Result]
 
-	results := APIResponse{
+	results := apiResponse{
 		StatusCode:  sendResult.Result,
 		Name:        res["name"],
 		Description: res["description"],
@@ -93,7 +95,7 @@ func (c Client) Send(messageID string, val SendRequest) (APIResponse, error) {
 }
 
 // GetStatus of a sent sms
-func (c Client) GetStatus(messageID string) (APIResponse, error) {
+func (c mediasms.Client) GetStatus(messageID string) (apiResponse, error) {
 	smsID := createSMSID(c.Prefix, messageID)
 
 	client := &http.Client{}
@@ -113,7 +115,7 @@ func (c Client) GetStatus(messageID string) (APIResponse, error) {
 	t := strings.Split(s, "\n")
 
 	if t[0] == "200" {
-		results := APIResponse{
+		results := apiResponse{
 			StatusCode:  "200",
 			Name:        "Success",
 			Description: translationMap[t[1]],
@@ -121,12 +123,12 @@ func (c Client) GetStatus(messageID string) (APIResponse, error) {
 		return results, err
 	}
 
-	var getResult ResultCode
+	var getResult resultCode
 	json.Unmarshal(body, &getResult)
 
 	res := getResultsMapper[getResult.Result]
 
-	results := APIResponse{
+	results := apiResponse{
 		StatusCode:  getResult.Result,
 		Name:        res["name"],
 		Description: res["description"],
