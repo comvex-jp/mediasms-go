@@ -29,21 +29,24 @@ func createSMSID(prefix, messageID string) string {
 	return prefix + messageID
 }
 
-const smsurl = "https://www.sms-console.jp/"
+// SMSURL constant for sms-console
+const SMSURL = "https://www.sms-console.jp/"
 
 // Send request to media4u
 func (c Client) Send(messageID string, val models.SendRequest) (models.APIResponse, error) {
 	smsID := createSMSID(c.Prefix, messageID)
 
-	val.Smsid = smsID
+	val.SMSID = smsID
 
 	jsonValue, _ := json.Marshal(val)
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", smsurl+"api/", bytes.NewBuffer(jsonValue))
+
+	req, err := http.NewRequest("POST", SMSURL+"api/", bytes.NewBuffer(jsonValue))
 	req.SetBasicAuth(c.Username, c.Password)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,11 +73,13 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 	smsID := createSMSID(c.Prefix, messageID)
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", smsurl+"api5/?smsid="+smsID, nil)
+
+	req, err := http.NewRequest("GET", SMSURL+"api5/?smsid="+smsID, nil)
 	req.SetBasicAuth(c.Username, c.Password)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
+
 	if err != nil {
 		log.Fatal(err)
 	}
