@@ -27,7 +27,7 @@ var ResultsMapper = map[string]map[string]string{
 		"description": "User reached max limit on requests/sec from the single IP address",
 	},
 	"514": {
-		"name":        "sms_doesn't_exist",
+		"name":        "sms_doesnt_exist",
 		"description": "SMS does not exist",
 	},
 	"550": {
