@@ -1,4 +1,4 @@
-package mediasmserrors
+package errors
 
 // GetResultsMapper is a hashmap of all possible results when getting the status of an sms
 var GetResultsMapper = map[string]map[string]string{

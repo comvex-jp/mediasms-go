@@ -1,4 +1,4 @@
-package mediasmserrors
+package errors
 
 // SendResultsMapper is a hashmap of all possible results when sending an sms
 var SendResultsMapper = map[string]map[string]string{

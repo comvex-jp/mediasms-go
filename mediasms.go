@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/comvex-jp/mediasms-go/mediasmserrors"
+	"github.com/comvex-jp/mediasms-go/errors"
 	"github.com/comvex-jp/mediasms-go/models"
 	"github.com/comvex-jp/mediasms-go/translations"
 )
@@ -54,7 +54,7 @@ func (c Client) Send(messageID string, val models.SendRequest) (models.APIRespon
 	var sendResult resultCode
 	json.Unmarshal(body, &sendResult)
 
-	var res = mediasmserrors.SendResultsMapper[sendResult.Result]
+	var res = errors.SendResultsMapper[sendResult.Result]
 
 	results := models.APIResponse{
 		StatusCode:  sendResult.Result,
@@ -97,7 +97,7 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 	var getResult resultCode
 	json.Unmarshal(body, &getResult)
 
-	res := mediasmserrors.GetResultsMapper[getResult.Result]
+	res := errors.GetResultsMapper[getResult.Result]
 
 	results := models.APIResponse{
 		StatusCode:  getResult.Result,
