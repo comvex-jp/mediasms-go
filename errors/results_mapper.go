@@ -1,7 +1,7 @@
 package errors
 
-// SendResultsMapper is a hashmap of all possible results when sending an sms
-var SendResultsMapper = map[string]map[string]string{
+// ResultsMapper is a hashmap of all possible results when sending an sms
+var ResultsMapper = map[string]map[string]string{
 	"200": {
 		"name":        "success_code",
 		"description": "Sent SMS",
@@ -10,9 +10,25 @@ var SendResultsMapper = map[string]map[string]string{
 		"name":        "authentication_error",
 		"description": "Authorization Required",
 	},
+	"405": {
+		"name":        "method",
+		"description": "405 Method not allowed",
+	},
 	"414": {
-		"name":        "failed_to_send_sms",
+		"name":        "failed_to_send_request",
 		"description": "URL is longer than 8,190 byte",
+	},
+	"502": {
+		"name":        "bad_gateway",
+		"description": "SMS-CONSOLE completely stopped",
+	},
+	"503": {
+		"name":        "temporarily_unavailable",
+		"description": "User reached max limit on requests/sec from the single IP address",
+	},
+	"514": {
+		"name":        "sms_doesn't_exist",
+		"description": "SMS does not exist",
 	},
 	"550": {
 		"name":        "failed_to_send_sms",
@@ -26,9 +42,61 @@ var SendResultsMapper = map[string]map[string]string{
 		"name":        "mobile_number",
 		"description": "Mobile number is invalid",
 	},
+	"562": {
+		"name":        "send_date_&_time",
+		"description": "Send date & time is invalid.",
+	},
+	"564": {
+		"name":        "reply_id_is_invalid",
+		"description": "Reply ID is invalid.",
+	},
+	"566": {
+		"name":        "reply_id_doesn't_exist",
+		"description": "Reply ID doesn't exist.",
+	},
+	"568": {
+		"name":        "au_title",
+		"description": "AU SMS title is invalid",
+	},
+	"569": {
+		"name":        "softbank_title",
+		"description": "Softbank SMS title is invalid",
+	},
 	"570": {
 		"name":        "basic_sms_text_id",
 		"description": "basic SMS text ID is invalid",
+	},
+	"571": {
+		"name":        "sending_attempts_is_invalid",
+		"description": "Sending attempts is invalid.",
+	},
+	"572": {
+		"name":        "resending_interval_is_invalid",
+		"description": "Resending interval is invalid.",
+	},
+	"573": {
+		"name":        "status",
+		"description": "Status is invalid",
+	},
+	"574": {
+		"name":        "sms_id",
+		"description": "SMS ID is invalid",
+	},
+	"575": {
+		"name":        "docomo",
+		"description": "Docomo is invalid",
+	},
+	"576": {
+		"name":        "au",
+		"description": "au is invalid",
+	},
+	"577": {
+		"name":        "soft_bank",
+		"description": "Soft Bank is invalid",
+	},
+	"579": {
+		"name":        "gateway",
+		"description": "Gateway is invalid",
 	},
 	"580": {
 		"name":        "sms_title",
@@ -37,6 +105,22 @@ var SendResultsMapper = map[string]map[string]string{
 	"585": {
 		"name":        "basic_sms_text",
 		"description": "Basic SMS text is invalid",
+	},
+	"586": {
+		"name":        "sms_text_2_(forSDP)",
+		"description": "SMS text 2 is invalid",
+	},
+	"587": {
+		"name":        "not_unique_sms_id",
+		"description": "SMS ID is not unique",
+	},
+	"588": {
+		"name":        "sms_text_for_docomo",
+		"description": "SMS text for Docomo is invalid",
+	},
+	"589": {
+		"name":        "sms_text_for_softbank",
+		"description": "SMS text for Softbank is invalid",
 	},
 	"590": {
 		"name":        "original_url",
@@ -62,81 +146,13 @@ var SendResultsMapper = map[string]map[string]string{
 		"name":        "2_way_sms_function_is_invalid",
 		"description": "2-way SMS is disabled",
 	},
-	"573": {
-		"name":        "status",
-		"description": "Status is invalid",
-	},
-	"574": {
-		"name":        "sms_id",
-		"description": "SMS ID is invalid",
-	},
-	"586": {
-		"name":        "sms_text_2_(forSDP)",
-		"description": "SMS text 2 is invalid",
-	},
-	"587": {
-		"name":        "sms_id_is_duplicate",
-		"description": "SMS ID is not unique",
-	},
-	"575": {
-		"name":        "docomo",
-		"description": "Docomo is invalid",
-	},
-	"576": {
-		"name":        "au",
-		"description": "au is invalid",
-	},
-	"577": {
-		"name":        "soft_bank",
-		"description": "Soft Bank is invalid",
-	},
-	"579": {
-		"name":        "gateway",
-		"description": "Gateway is invalid",
-	},
-	"562": {
-		"name":        "send_date_&_time",
-		"description": "Send date & time is invalid.",
-	},
-	"599": {
-		"name":        "resending_is_disabled",
-		"description": "Resending is disabled.",
-	},
-	"571": {
-		"name":        "sending_attempts_is_invalid",
-		"description": "Sending attempts is invalid.",
-	},
-	"572": {
-		"name":        "resending_interval_is_invalid",
-		"description": "Resending interval is invalid.",
-	},
-	"564": {
-		"name":        "reply_id_is_invalid",
-		"description": "Reply ID is invalid.",
-	},
-	"566": {
-		"name":        "reply_id_doesn't_exist",
-		"description": "Reply ID doesn't exist.",
-	},
-	"588": {
-		"name":        "sms_text_for_docomo",
-		"description": "SMS text for Docomo is invalid",
-	},
-	"589": {
-		"name":        "sms_text_for_softbank",
-		"description": "SMS text for Softbank is invalid",
-	},
 	"598": {
 		"name":        "docomo_title",
 		"description": "Docomo SMS title is invalid",
 	},
-	"568": {
-		"name":        "au_title",
-		"description": "AU SMS title is invalid",
-	},
-	"569": {
-		"name":        "softbank_title",
-		"description": "Softbank SMS title is invalid",
+	"599": {
+		"name":        "resending_is_disabled",
+		"description": "Resending is disabled.",
 	},
 	"600": {
 		"name":        "keep_chatid",
@@ -174,10 +190,6 @@ var SendResultsMapper = map[string]map[string]string{
 		"name":        "hlr_is_disabled",
 		"description": "HLR is disabled",
 	},
-	"617": {
-		"name":        "memo_is_disabled",
-		"description": "Memo is disabled",
-	},
 	"612": {
 		"name":        "original_url2",
 		"description": "612 Original URL 2 is invalid",
@@ -194,9 +206,9 @@ var SendResultsMapper = map[string]map[string]string{
 		"name":        "json_format_is_incorrect",
 		"description": "615 Incorrect JSON format",
 	},
-	"405": {
-		"name":        "method",
-		"description": "405 Method not allowed",
+	"617": {
+		"name":        "memo_is_disabled",
+		"description": "Memo is disabled",
 	},
 	"618": {
 		"name":        "basic_sms_text_is_long_for_docomo_api",
@@ -273,5 +285,9 @@ var SendResultsMapper = map[string]map[string]string{
 	"643": {
 		"name":        "original_url_code_4",
 		"description": "643 Original URL code 4 is invalid",
+	},
+	"666": {
+		"name":        "prior_to_block_ip_address",
+		"description": "Prior to block IP address",
 	},
 }

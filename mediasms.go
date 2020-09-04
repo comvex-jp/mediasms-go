@@ -57,7 +57,7 @@ func (c Client) Send(messageID string, val models.SendRequest) (models.APIRespon
 	var sendResult resultCode
 	json.Unmarshal(body, &sendResult)
 
-	var res = errors.SendResultsMapper[sendResult.Result]
+	var res = errors.ResultsMapper[sendResult.Result]
 
 	results := models.APIResponse{
 		StatusCode:  sendResult.Result,
@@ -102,7 +102,7 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 	var getResult resultCode
 	json.Unmarshal(body, &getResult)
 
-	res := errors.GetResultsMapper[getResult.Result]
+	res := errors.ResultsMapper[getResult.Result]
 
 	results := models.APIResponse{
 		StatusCode:  getResult.Result,
