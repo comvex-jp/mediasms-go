@@ -39,13 +39,13 @@ func (c Client) Send(messageID string, val models.SendRequest) (models.APIRespon
 	val.SMSID = smsID
 
 	jsonValue, _ := json.Marshal(val)
-	client := &http.Client{}
+	httpClient := &http.Client{}
 
-	req, err := http.NewRequest("POST", SMSURL+"api/", bytes.NewBuffer(jsonValue))
+	req, _ := http.NewRequest("POST", SMSURL+"api/", bytes.NewBuffer(jsonValue))
 	req.SetBasicAuth(c.Username, c.Password)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 
 	if err != nil {
 		log.Fatal(err)
@@ -74,7 +74,7 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 
 	client := &http.Client{}
 
-	req, err := http.NewRequest("GET", SMSURL+"api5/?smsid="+smsID, nil)
+	req, _ := http.NewRequest("GET", SMSURL+"api5/?smsid="+smsID, nil)
 	req.SetBasicAuth(c.Username, c.Password)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -86,7 +86,7 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, _ := ioutil.ReadAll(resp.Body)
 	s := string(body)
 	t := strings.Split(s, "\n")
 
