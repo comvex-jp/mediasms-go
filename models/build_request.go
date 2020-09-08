@@ -1,7 +1,7 @@
 package models
 
-// SendRequest struct
-type SendRequest struct {
+// BuildRequest struct
+type BuildRequest struct {
 	SMSID         string `json:"smsid"`
 	SMSTitle      string `json:"smstitle"`
 	SMSText       string `json:"smstext"`

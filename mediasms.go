@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
@@ -33,7 +32,7 @@ func createSMSID(prefix, messageID string) string {
 const SMSURL = "https://www.sms-console.jp/"
 
 // Send request to media4u
-func (c Client) Send(messageID string, val models.SendRequest) (models.APIResponse, error) {
+func (c Client) Send(messageID string, val models.BuildRequest) (models.APIResponse, string) {
 	smsID := createSMSID(c.Prefix, messageID)
 
 	val.SMSID = smsID
@@ -48,7 +47,7 @@ func (c Client) Send(messageID string, val models.SendRequest) (models.APIRespon
 	resp, err := httpClient.Do(req)
 
 	if err != nil {
-		log.Fatal(err)
+		return models.APIResponse{}, err.Error()
 	}
 
 	defer resp.Body.Close()
@@ -65,11 +64,11 @@ func (c Client) Send(messageID string, val models.SendRequest) (models.APIRespon
 		Description: res["description"],
 	}
 
-	return results, err
+	return results, err.Error()
 }
 
 // GetStatus of a sent sms
-func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
+func (c Client) GetStatus(messageID string) (models.APIResponse, string) {
 	smsID := createSMSID(c.Prefix, messageID)
 
 	client := &http.Client{}
@@ -81,7 +80,7 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		log.Fatal(err)
+		return models.APIResponse{}, err.Error()
 	}
 
 	defer resp.Body.Close()
@@ -96,7 +95,7 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 			Name:        "Success",
 			Description: translations.TranslationMap[t[1]],
 		}
-		return results, err
+		return results, err.Error()
 	}
 
 	var getResult resultCode
@@ -110,5 +109,5 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 		Description: res["description"],
 	}
 
-	return results, err
+	return results, err.Error()
 }
