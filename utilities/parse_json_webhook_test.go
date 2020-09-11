@@ -25,7 +25,7 @@ var reqJSON = map[string]string{
 	"waitreturnsms":     "1",
 	"returnsmsdatetime": "2020年09月01日 10:00:00",
 	"replyid":           "1",
-	"senderid":          "2"}
+	"senderid":          "222211110000"}
 
 func TestParseJSONWebHook(t *testing.T) {
 
@@ -33,4 +33,7 @@ func TestParseJSONWebHook(t *testing.T) {
 	w := ParseJSONWebHook(request)
 
 	assert.Equal(t, "11122223333", w.MobileNumber, "they should be equal")
+	assert.Equal(t, "http://google.com", w.OriginalURL, "they should be equal")
+	assert.Equal(t, "2020年09月01日 10:00:00", w.ReturnSMSDatetime, "they should be equal")
+	assert.Equal(t, "222211110000", w.SenderID, "they should be equal")
 }
