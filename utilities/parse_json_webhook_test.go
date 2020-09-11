@@ -28,7 +28,6 @@ var reqJSON = map[string]string{
 	"senderid":          "222211110000"}
 
 func TestParseJSONWebHook(t *testing.T) {
-
 	request, _ := json.Marshal(reqJSON)
 	w := ParseJSONWebHook(request)
 
