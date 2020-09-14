@@ -2,6 +2,7 @@ package utilities
 
 import (
 	"encoding/json"
+	"regexp"
 
 	"github.com/comvex-jp/mediasms-go/models"
 )
@@ -11,6 +12,13 @@ func ParseJSONWebHook(body []byte) models.WebHook {
 	var w models.WebHook
 
 	json.Unmarshal(body, &w)
+
+	var yearMonthRegex = regexp.MustCompile("[年月]")
+	s := yearMonthRegex.ReplaceAllString(w.ReturnSMSDatetime, `-`)
+
+	var dayRegEx = regexp.MustCompile("[日]")
+	t := dayRegEx.ReplaceAllString(s, "")
+	w.ReturnSMSDatetime = t
 
 	return w
 }
