@@ -27,6 +27,7 @@ var TranslationMap = map[string]string{
 	"23": "Error status for HLR API",
 	"24": "SMS is scheduled, but not sent yet",
 	"25": "CSV file with SMS was paused",
+	"26": "Inbound SMS",
 	"27": "SMS was sent out of the allowed time",
 	"28": "No resourse for Reply",
 	"29": "Docomo, other unknown",
