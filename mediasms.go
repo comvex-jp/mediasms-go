@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/comvex-jp/mediasms-go/translations"
+
 	"github.com/comvex-jp/mediasms-go/errors"
 	"github.com/comvex-jp/mediasms-go/models"
-	"github.com/comvex-jp/mediasms-go/translations"
 )
 
 // Client struct
@@ -31,62 +32,74 @@ func createSMSID(prefix, messageID string) string {
 // SMSURL constant for sms-console
 const SMSURL = "https://www.sms-console.jp/"
 
-// Send request to media4u
-func (c Client) Send(messageID string, val models.BuildRequest) (models.APIResponse, string) {
-	smsID := createSMSID(c.Prefix, messageID)
-
-	val.SMSID = smsID
-
-	jsonValue, _ := json.Marshal(val)
+// makeRequest is a generic handler for api calls
+func (c Client) makeRequest(requestMethod, url string, body interface{}) ([]byte, error) {
 	httpClient := &http.Client{}
 
-	req, _ := http.NewRequest("POST", SMSURL+"api/", bytes.NewBuffer(jsonValue))
+	jsonValue, _ := json.Marshal(body)
+
+	req, _ := http.NewRequest(requestMethod, url, bytes.NewBuffer(jsonValue))
 	req.SetBasicAuth(c.Username, c.Password)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := httpClient.Do(req)
 
 	if err != nil {
-		return models.APIResponse{}, err.Error()
+		return jsonValue, err
 	}
 
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	responseBody, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		return responseBody, err
+	}
+
+	return responseBody, nil
+}
+
+// Send request to media4u
+func (c Client) Send(messageID string, val models.BuildRequest) (models.APIResponse, error) {
+	smsID := createSMSID(c.Prefix, messageID)
+
+	val.SMSID = smsID
+
+	results, err := c.makeRequest("POST", SMSURL+"api/", val)
+
+	if err != nil {
+		return models.APIResponse{}, err
+	}
+
 	var sendResult resultCode
-	json.Unmarshal(body, &sendResult)
+	unmarshalErr := json.Unmarshal(results, &sendResult)
+
+	if err != nil {
+		return models.APIResponse{}, unmarshalErr
+	}
 
 	var res = errors.ResultsMapper[sendResult.Result]
 
-	results := models.APIResponse{
+	response := models.APIResponse{
 		StatusCode:  sendResult.Result,
 		Name:        res["name"],
 		Description: res["description"],
 	}
 
-	return results, err.Error()
+	return response, nil
 }
 
 // GetStatus of a sent sms
-func (c Client) GetStatus(messageID string) (models.APIResponse, string) {
+func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 	smsID := createSMSID(c.Prefix, messageID)
 
-	client := &http.Client{}
-
-	req, _ := http.NewRequest("GET", SMSURL+"api5/?smsid="+smsID, nil)
-	req.SetBasicAuth(c.Username, c.Password)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
+	results, err := c.makeRequest("GET", SMSURL+"api5/?smsid="+smsID, nil)
 
 	if err != nil {
-		return models.APIResponse{}, err.Error()
+		return models.APIResponse{}, err
 	}
 
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	s := string(body)
+	s := string(results)
 	t := strings.Split(s, "\n")
 
 	if t[0] == "200" {
@@ -95,19 +108,23 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, string) {
 			Name:        "Success",
 			Description: translations.TranslationMap[t[1]],
 		}
-		return results, err.Error()
+		return results, nil
 	}
 
 	var getResult resultCode
-	json.Unmarshal(body, &getResult)
+	unmarshalErr := json.Unmarshal(results, &getResult)
+
+	if unmarshalErr != nil {
+		return models.APIResponse{}, nil
+	}
 
 	res := errors.ResultsMapper[getResult.Result]
 
-	results := models.APIResponse{
+	response := models.APIResponse{
 		StatusCode:  getResult.Result,
 		Name:        res["name"],
 		Description: res["description"],
 	}
 
-	return results, err.Error()
+	return response, nil
 }
