@@ -14,4 +14,9 @@ type BuildRequest struct {
 	ReturnSMS     string `json:"returnsms"`
 	WaitReturnSMS string `json:"waitreturnsms"`
 	Type          string `json:"type"`
+	Au            string `json:"au"`
+	Docomo        string `json:"docomo"`
+	Softbank      string `json:"softbank"`
+	Gateway       string `json:"gateway"`
+	Rakuten       string `json:"rakuten"`
 }
