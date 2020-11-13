@@ -41,7 +41,7 @@ func NewBuildRequest() BuildRequest {
 	}
 }
 
-// MarshalJSON ...
+// MarshalJSON overrides the custom serialization to prepare the data for the MediaSms API
 func (br BuildRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		SMSID         string `json:"smsid,omitempty"`
