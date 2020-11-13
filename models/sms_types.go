@@ -1,7 +1,7 @@
 package models
 
 const (
-	// TypeSms TODO
+	// TypeSms is used to consume the short message service and send messages to given mobile numbers
 	TypeSms = "sms"
 	// TypeCheck TODO
 	TypeCheck = "check"
