@@ -17,7 +17,7 @@ func TestBuildRequestMarshalJson(t *testing.T) {
 		t.Errorf("Validation Failure %s", err.Error())
 	}
 
-	expectedJSONString := `{"smstext":"Lorem Ipsum","mobilenumber":"07012345678","returnsms":"0","waitreturnsms":"0","au":"1","docomo":"1-0","softbank":"1-5","gateway":"1-1","rakuten":"1-2","sim":"1"}`
+	expectedJSONString := `{"smstext":"Lorem Ipsum","mobilenumber":"07012345678","returnsms":"0","waitreturnsms":"0","type":"sms","au":"1","docomo":"1-0","softbank":"1-5","gateway":"1-1","rakuten":"1-2","sim":"1"}`
 
 	if string(mbr) != expectedJSONString {
 		t.Errorf("Unexpected Serialization Value %s", string(mbr))

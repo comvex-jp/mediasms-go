@@ -1,16 +1,29 @@
 package models
 
-// TypeSms is used to send short messages to given phone numbers
-const (
-	TypeSms = "sms"
+// SmsTypeAlias hide the real type of the enum
+type SmsTypeAlias = string
+
+type list struct {
+	// TypeSms is used to send short messages to given phone numbers
+	Sms SmsTypeAlias
 	// TypeCheck TODO
-	TypeCheck = "check"
+	Check SmsTypeAlias
 	// TypeCheckSms TODO
-	TypeCheckSms = "checksms"
+	CheckSms SmsTypeAlias
 	// TypeHlr TODO
-	TypeHlr = "hlr"
+	Hlr SmsTypeAlias
 	// TypeRcs TODO
-	TypeRcs = "rcs"
+	Rcs SmsTypeAlias
 	// TypeRcsSms TODO
-	TypeRcsSms = "rcssms"
-)
+	RcsSms SmsTypeAlias
+}
+
+// SmsTypes are the available sms types
+var SmsTypes = &list{
+	Sms:      "sms",
+	Check:    "check",
+	CheckSms: "checksms",
+	Hlr:      "hlr",
+	Rcs:      "rcs",
+	RcsSms:   "rcssms",
+}

@@ -21,7 +21,7 @@ type BuildRequest struct {
 	Status        string
 	ReturnSMS     bool
 	WaitReturnSMS bool
-	Type          string
+	Type          SmsTypeAlias
 	Au            AuConfig
 	Docomo        DocomoConfig
 	Softbank      SoftbankConfig
@@ -39,6 +39,7 @@ func NewBuildRequest() BuildRequest {
 		Gateway:  GatewayConfig{NumberOfRetries: 1, RetryInterval: []int{1}},
 		Rakuten:  RakutenConfig{NumberOfRetries: 1, RetryInterval: []int{2}},
 		Sim:      SimConfig{NumberOfRetries: 1},
+		Type:     SmsType.Sms,
 	}
 }
 
@@ -120,7 +121,7 @@ func (br BuildRequest) validate() error {
 		return errors.New("[Au] Invalid amount number of retries")
 	}
 
-	// TODO: Validate sms types
+	// TODO: Validate Types
 	// TODO: Validate URL lenght
 
 	return nil
