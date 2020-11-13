@@ -112,8 +112,12 @@ func (br BuildRequest) validate() error {
 		return errors.New("[Rakuten] Invalid amount of retries interval values, the number of retries interval has to be the same as number of retries specified")
 	}
 
-	if len(br.Sim.RetryInterval) != br.Sim.NumberOfRetries {
-		return errors.New("[Sim] Invalid amount of retries interval values, the number of retries interval has to be the same as number of retries specified")
+	if br.Sim.NumberOfRetries < 1 && br.Sim.NumberOfRetries > 5 {
+		return errors.New("[Sim] Invalid amount number of retries")
+	}
+
+	if br.Au.NumberOfRetries < 1 && br.Au.NumberOfRetries > 5 {
+		return errors.New("[Au] Invalid amount number of retries")
 	}
 
 	return nil
