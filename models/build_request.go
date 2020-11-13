@@ -120,6 +120,9 @@ func (br BuildRequest) validate() error {
 		return errors.New("[Au] Invalid amount number of retries")
 	}
 
+	// TODO: Validate sms types
+	// TODO: Validate URL lenght
+
 	return nil
 }
 
