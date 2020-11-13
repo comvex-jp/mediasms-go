@@ -3,8 +3,11 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/comvex-jp/mediasms-go/helpers"
 )
 
 // BuildRequest struct
@@ -21,7 +24,7 @@ type BuildRequest struct {
 	Status        string
 	ReturnSMS     bool
 	WaitReturnSMS bool
-	Type          SmsTypeAlias
+	Type          string
 	Au            AuConfig
 	Docomo        DocomoConfig
 	Softbank      SoftbankConfig
@@ -39,7 +42,7 @@ func NewBuildRequest() BuildRequest {
 		Gateway:  GatewayConfig{NumberOfRetries: 1, RetryInterval: []int{1}},
 		Rakuten:  RakutenConfig{NumberOfRetries: 1, RetryInterval: []int{2}},
 		Sim:      SimConfig{NumberOfRetries: 1},
-		Type:     SmsType.Sms,
+		Type:     TypeSms,
 	}
 }
 
@@ -121,7 +124,10 @@ func (br BuildRequest) validate() error {
 		return errors.New("[Au] Invalid amount number of retries")
 	}
 
-	// TODO: Validate Types
+	if !helpers.Contains(availableSmsTypes(), br.Type) {
+		return fmt.Errorf("Invalid sms type. The type must be one of the: %s", strings.Join(availableSmsTypes(), ","))
+	}
+
 	// TODO: Validate URL lenght
 
 	return nil
