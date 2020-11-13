@@ -11,7 +11,8 @@ import (
 )
 
 // BuildRequest struct
-// TODO: Convert the return sms and wait return sms to boolean
+// SMSID is a unique identifier used to retrieve status after sending, If Status is set to true the SMSID is required
+// Status is a nullable boolean, if the status is set as true, the status will be sent back
 type BuildRequest struct {
 	SMSID         string
 	SMSTitle      string
@@ -21,7 +22,7 @@ type BuildRequest struct {
 	OriginalURL2  string
 	OriginalURL3  string
 	OriginalURL4  string
-	Status        string
+	Status        bool
 	ReturnSMS     bool
 	WaitReturnSMS bool
 	Type          string
@@ -33,7 +34,7 @@ type BuildRequest struct {
 	Sim           SimConfig
 }
 
-// NewBuildRequest returns ...
+// NewBuildRequest returns an instance of BuildRequest with default values
 func NewBuildRequest() BuildRequest {
 	return BuildRequest{
 		Au:       AuConfig{NumberOfRetries: 1},
@@ -43,6 +44,7 @@ func NewBuildRequest() BuildRequest {
 		Rakuten:  RakutenConfig{NumberOfRetries: 1, RetryInterval: []int{2}},
 		Sim:      SimConfig{NumberOfRetries: 1},
 		Type:     TypeSms,
+		Status:   true,
 	}
 }
 
@@ -82,7 +84,7 @@ func (br BuildRequest) MarshalJSON() ([]byte, error) {
 		OriginalURL3:  br.OriginalURL3,
 		OriginalURL4:  br.OriginalURL4,
 		MobileNumber:  br.MobileNumber,
-		Status:        br.Status,
+		Status:        buildBooleanPayload(br.Status),
 		ReturnSMS:     buildBooleanPayload(br.ReturnSMS),
 		WaitReturnSMS: buildBooleanPayload(br.WaitReturnSMS),
 		Type:          br.Type,
@@ -98,6 +100,10 @@ func (br BuildRequest) MarshalJSON() ([]byte, error) {
 func (br BuildRequest) validate() error {
 	if br.ReturnSMS && br.SMSID == "" {
 		return errors.New("SMSID is required on two way sms (ReturnSMS) is enabled")
+	}
+
+	if br.Status && br.SMSID == "" {
+		return errors.New("SMSID is required when Status is enabled")
 	}
 
 	if len(br.Docomo.RetryInterval) != br.Docomo.NumberOfRetries {
