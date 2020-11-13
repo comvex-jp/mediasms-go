@@ -128,3 +128,13 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 
 	return response, nil
 }
+
+// ReplaceMessageBodyURLs removes urls and replaces them with mediasms acceptable values
+func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
+	urlReplacements := []string{"{URL}", "{URL2}", "{URL3}", "{URL4}"}
+
+	for i := range allURLs {
+		messageBody = strings.Replace(messageBody, allURLs[i], urlReplacements[i], 1)
+	}
+	return messageBody
+}
