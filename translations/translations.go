@@ -1,6 +1,6 @@
 package translations
 
-// TranslationMap converts from Japanese to English
+// TranslationMap converts the int status value to a readable code
 var TranslationMap = map[int]string{
 	0:  "failed",
 	1:  "delivered",
