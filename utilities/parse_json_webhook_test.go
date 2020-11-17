@@ -29,7 +29,7 @@ var reqJSON = map[string]string{
 
 func TestParseJSONWebHook(t *testing.T) {
 	request, _ := json.Marshal(reqJSON)
-	w := ParseJSONWebHook(request)
+	w, _ := ParseJSONWebHook(request)
 
 	assert.Equal(t, "11122223333", w.MobileNumber, "they should be equal")
 	assert.Equal(t, "http://google.com", w.OriginalURL, "they should be equal")

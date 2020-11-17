@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/comvex-jp/mediasms-go/translations"
@@ -102,11 +103,17 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 	s := string(results)
 	t := strings.Split(s, "\n")
 
-	if t[0] == "200" {
+	status, err := strconv.Atoi(t[0])
+
+	if err != nil {
+		return models.APIResponse{}, err
+	}
+
+	if status == 200 {
 		results := models.APIResponse{
 			StatusCode:  "200",
 			Name:        "Success",
-			Description: translations.TranslationMap[t[1]],
+			Description: translations.TranslationMap[status],
 		}
 		return results, nil
 	}
