@@ -9,7 +9,7 @@ import (
 
 var reqJSON = map[string]string{
 	"mobilenumber":      "11122223333",
-	"status":            "送信済",
+	"status":            "1",
 	"smsid":             "1234567890",
 	"smstext":           "test",
 	"clicks":            "1",
@@ -35,5 +35,5 @@ func TestParseJSONWebHook(t *testing.T) {
 	assert.Equal(t, "http://google.com", w.OriginalURL, "they should be equal")
 	assert.Equal(t, "2020-09-01 10:00:00", w.ReturnSMSDatetime, "they should be equal")
 	assert.Equal(t, "222211110000", w.SenderID, "they should be equal")
-	assert.Equal(t, "Sent", w.Status, "they should be equal")
+	assert.Equal(t, "delivered", w.Status, "they should be equal")
 }
