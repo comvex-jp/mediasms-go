@@ -136,5 +136,6 @@ func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
 	for i := range allURLs {
 		messageBody = strings.Replace(messageBody, allURLs[i], urlReplacements[i], 1)
 	}
+
 	return messageBody
 }
