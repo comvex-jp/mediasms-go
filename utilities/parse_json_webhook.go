@@ -3,6 +3,7 @@ package utilities
 import (
 	"encoding/json"
 	"regexp"
+	"strconv"
 
 	"github.com/comvex-jp/mediasms-go/translations"
 
@@ -10,19 +11,32 @@ import (
 )
 
 // ParseJSONWebHook returns a WebHook struct
-func ParseJSONWebHook(body []byte) models.WebHook {
+func ParseJSONWebHook(body []byte) (models.WebHook, error) {
 	var w models.WebHook
 
-	json.Unmarshal(body, &w)
+	err := json.Unmarshal(body, &w)
+
+	if err != nil {
+		return w, err
+	}
 
 	var yearMonthRegex = regexp.MustCompile("[年月]")
+
 	s := yearMonthRegex.ReplaceAllString(w.ReturnSMSDatetime, `-`)
 
 	var dayRegEx = regexp.MustCompile("[日]")
+
 	t := dayRegEx.ReplaceAllString(s, "")
+
 	w.ReturnSMSDatetime = t
 
-	w.Status = translations.TranslationMap[w.Status]
+	status, err := strconv.Atoi(w.Status)
 
-	return w
+	if err != nil {
+		return w, err
+	}
+
+	w.Status = translations.TranslationMap[status]
+
+	return w, nil
 }
