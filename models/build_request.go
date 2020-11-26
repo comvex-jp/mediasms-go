@@ -37,12 +37,12 @@ type BuildRequest struct {
 // NewBuildRequest returns an instance of BuildRequest with default values
 func NewBuildRequest() BuildRequest {
 	return BuildRequest{
-		Au:       AuConfig{NumberOfRetries: 1},
-		Docomo:   DocomoConfig{NumberOfRetries: 1, RetryInterval: []int{0}},
-		Softbank: SoftbankConfig{NumberOfRetries: 1, RetryInterval: []int{5}},
-		Gateway:  GatewayConfig{NumberOfRetries: 1, RetryInterval: []int{1}},
-		Rakuten:  RakutenConfig{NumberOfRetries: 1, RetryInterval: []int{2}},
-		Sim:      SimConfig{NumberOfRetries: 1},
+		Au:       AuConfig{NumberOfAttempts: 1},
+		Docomo:   DocomoConfig{NumberOfAttempts: 1, RetryInterval: []int{0}},
+		Softbank: SoftbankConfig{NumberOfAttempts: 1, RetryInterval: []int{5}},
+		Gateway:  GatewayConfig{NumberOfAttempts: 1, RetryInterval: []int{1}},
+		Rakuten:  RakutenConfig{NumberOfAttempts: 1, RetryInterval: []int{2}},
+		Sim:      SimConfig{NumberOfAttempts: 1},
 		Type:     TypeSms,
 		Status:   true,
 	}
@@ -88,12 +88,12 @@ func (br BuildRequest) MarshalJSON() ([]byte, error) {
 		ReturnSMS:     buildBooleanPayload(br.ReturnSMS),
 		WaitReturnSMS: buildBooleanPayload(br.WaitReturnSMS),
 		Type:          br.Type,
-		Au:            strconv.Itoa(br.Au.NumberOfRetries),
-		Docomo:        buildRetriesPayload(br.Docomo.NumberOfRetries, br.Docomo.RetryInterval),
-		Softbank:      buildRetriesPayload(br.Softbank.NumberOfRetries, br.Softbank.RetryInterval),
-		Gateway:       buildRetriesPayload(br.Gateway.NumberOfRetries, br.Gateway.RetryInterval),
-		Rakuten:       buildRetriesPayload(br.Rakuten.NumberOfRetries, br.Rakuten.RetryInterval),
-		Sim:           strconv.Itoa(br.Sim.NumberOfRetries),
+		Au:            strconv.Itoa(br.Au.NumberOfAttempts),
+		Docomo:        buildRetriesPayload(br.Docomo.NumberOfAttempts, br.Docomo.RetryInterval),
+		Softbank:      buildRetriesPayload(br.Softbank.NumberOfAttempts, br.Softbank.RetryInterval),
+		Gateway:       buildRetriesPayload(br.Gateway.NumberOfAttempts, br.Gateway.RetryInterval),
+		Rakuten:       buildRetriesPayload(br.Rakuten.NumberOfAttempts, br.Rakuten.RetryInterval),
+		Sim:           strconv.Itoa(br.Sim.NumberOfAttempts),
 	})
 }
 
@@ -106,27 +106,27 @@ func (br BuildRequest) validate() error {
 		return errors.New("SMSID is required when Status is enabled")
 	}
 
-	if len(br.Docomo.RetryInterval) != br.Docomo.NumberOfRetries {
+	if len(br.Docomo.RetryInterval) != br.Docomo.NumberOfAttempts {
 		return errors.New("[Docomo] Invalid amount of retries interval values, the number of retries interval has to be the same as number of retries specified")
 	}
 
-	if len(br.Softbank.RetryInterval) != br.Softbank.NumberOfRetries {
+	if len(br.Softbank.RetryInterval) != br.Softbank.NumberOfAttempts {
 		return errors.New("[Softbank] Invalid amount of retries interval values, the number of retries interval has to be the same as number of retries specified")
 	}
 
-	if len(br.Gateway.RetryInterval) != br.Gateway.NumberOfRetries {
+	if len(br.Gateway.RetryInterval) != br.Gateway.NumberOfAttempts {
 		return errors.New("[Gateway] Invalid amount of retries interval values, the number of retries interval has to be the same as number of retries specified")
 	}
 
-	if len(br.Rakuten.RetryInterval) != br.Rakuten.NumberOfRetries {
+	if len(br.Rakuten.RetryInterval) != br.Rakuten.NumberOfAttempts {
 		return errors.New("[Rakuten] Invalid amount of retries interval values, the number of retries interval has to be the same as number of retries specified")
 	}
 
-	if br.Sim.NumberOfRetries < 1 && br.Sim.NumberOfRetries > 5 {
+	if br.Sim.NumberOfAttempts < 1 && br.Sim.NumberOfAttempts > 5 {
 		return errors.New("[Sim] Invalid amount number of retries")
 	}
 
-	if br.Au.NumberOfRetries < 1 && br.Au.NumberOfRetries > 5 {
+	if br.Au.NumberOfAttempts < 1 && br.Au.NumberOfAttempts > 5 {
 		return errors.New("[Au] Invalid amount number of retries")
 	}
 
@@ -147,12 +147,12 @@ func buildBooleanPayload(val bool) string {
 	return "0"
 }
 
-func buildRetriesPayload(numberOfRetries int, interval []int) string {
+func buildRetriesPayload(NumberOfAttempts int, interval []int) string {
 	var sb strings.Builder
 
-	sb.WriteString(strconv.Itoa(numberOfRetries))
+	sb.WriteString(strconv.Itoa(NumberOfAttempts))
 
-	for i := 0; i < numberOfRetries; i++ {
+	for i := 0; i < NumberOfAttempts; i++ {
 		sb.WriteString("-")
 		sb.WriteString(strconv.Itoa(interval[i]))
 	}
