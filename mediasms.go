@@ -36,6 +36,12 @@ const SMSURL = "https://www.sms-console.jp/"
 // makeRequest is a generic handler for api calls
 func (c Client) makeRequest(requestMethod, url string, body interface{}) ([]byte, error) {
 	httpClient := &http.Client{}
+	
+	// If we are in the test environment, override transport
+	// so that we can mock the response data
+	if os.Getenv("APP_ENV") == "test" {
+		httpClient = &http.Client{Transport: httpmock.DefaultTransport}
+	}
 
 	jsonValue, _ := json.Marshal(body)
 
