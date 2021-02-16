@@ -19,9 +19,9 @@ func TestReplaceMessageBodyURLs(t *testing.T) {
 
 func TestMediaSMSResponder(t *testing.T) {
 	client := Client{
-		Username: "dgm_sms_test_1",
+		Username: "user_1",
 		Password: "password",
-		Prefix:   "A1",
+		Prefix:   "PREFX",
 		EnableMock: true,
 	}
 
@@ -34,8 +34,8 @@ func TestMediaSMSResponder(t *testing.T) {
 		SMSTitle:      "",
 		SMSText:       "Contact Message {URL} {URL2}",
 		MobileNumber:  "07011112222",
-		OriginalURL:   "https://click.sms.digima.local/v2/click?url=http%3A%2F%2Fgoogle.com%3Fdgm_bcn_clk%3Dd0b-QVNGRFMxfEExQjJDM3wxMjM0NTZ8c21z",
-		OriginalURL2:  "https://click.sms.digima.local/v2/click?url=http%3A%2F%2Fstackoverflow.com%3Fdgm_bcn_clk%3Dd0b-QVNGRFMxfEExQjJDM3w3ODkwMTJ8c21z",
+		OriginalURL:   "http://google.com",
+		OriginalURL2:  "http://yahoo.com",
 		OriginalURL3:  "",
 		OriginalURL4:  "",
 		Status:        true,
