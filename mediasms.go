@@ -19,6 +19,7 @@ type Client struct {
 	Username string
 	Password string
 	Prefix   string
+	EnableMock bool
 }
 
 // resultCode from media4u
@@ -37,9 +38,9 @@ const SMSURL = "https://www.sms-console.jp/"
 func (c Client) makeRequest(requestMethod, url string, body interface{}) ([]byte, error) {
 	httpClient := &http.Client{}
 	
-	// If we are in the test environment, override transport
+	// If mocking is enabled, override transport
 	// so that we can mock the response data
-	if os.Getenv("APP_ENV") == "test" {
+	if c.EnableMock {
 		httpClient = &http.Client{Transport: httpmock.DefaultTransport}
 	}
 

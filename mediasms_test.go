@@ -19,14 +19,11 @@ func TestReplaceMessageBodyURLs(t *testing.T) {
 }
 
 func TestMediaSMSResponder(t *testing.T) {
-	if err := os.Setenv("APP_ENV", "test"); err != nil {
-		assert.Fail(t, "Error setting env variable: ", err)
-	}
-
 	client := Client{
 		Username: "dgm_sms_test_1",
 		Password: "password",
 		Prefix:   "A1",
+		EnableMock: true,
 	}
 
 	response := map[string]interface{}{
