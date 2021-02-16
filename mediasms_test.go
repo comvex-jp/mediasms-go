@@ -2,7 +2,6 @@ package mediasms
 
 import (
 	"encoding/json"
-	"os"
 	"testing"
 
 	"github.com/comvex-jp/mediasms-go/models"
