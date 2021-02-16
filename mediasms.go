@@ -19,6 +19,7 @@ type Client struct {
 	Username string
 	Password string
 	Prefix   string
+	EnableMock bool
 }
 
 // resultCode from media4u
@@ -36,6 +37,12 @@ const SMSURL = "https://www.sms-console.jp/"
 // makeRequest is a generic handler for api calls
 func (c Client) makeRequest(requestMethod, url string, body interface{}) ([]byte, error) {
 	httpClient := &http.Client{}
+	
+	// If mocking is enabled, override transport
+	// so that we can mock the response data
+	if c.EnableMock {
+		httpClient = &http.Client{Transport: httpmock.DefaultTransport}
+	}
 
 	jsonValue, _ := json.Marshal(body)
 
