@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/comvex-jp/mediasms-go/translations"
-
+	"github.com/jarcoal/httpmock"
 	"github.com/comvex-jp/mediasms-go/errors"
 	"github.com/comvex-jp/mediasms-go/models"
 )
