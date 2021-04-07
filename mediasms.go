@@ -139,10 +139,28 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 // ReplaceMessageBodyURLs removes urls and replaces them with mediasms acceptable values
 func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
 	urlReplacements := []string{"{URL}", "{URL2}", "{URL3}", "{URL4}"}
-
-	for i := range allURLs {
-		messageBody = strings.Replace(messageBody, allURLs[i], urlReplacements[i], 1)
+	
+	splitBody := strings.Split(messageBody, " ")
+	
+	urlHashmap := make(map[string]bool)
+	
+	for _, url := range allURLs {
+		urlHashmap[url] = true
+	}
+	
+	replacedMessageBody := []string{}
+	
+	replacementURLIndex := 0
+	
+	for _, w := range splitBody {
+		if _, ok := urlHashmap[w]; ok {
+			replacedMessageBody = append(replacedMessageBody, urlReplacements[replacementURLIndex])
+			replacementURLIndex += 1
+			continue
+		}
+		
+		replacedMessageBody = append(replacedMessageBody, w)
 	}
 
-	return messageBody
+	return strings.Join(replacedMessageBody, " ")
 }

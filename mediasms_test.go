@@ -7,9 +7,15 @@ import (
 )
 
 func TestReplaceMessageBodyURLs(t *testing.T) {
-	messageBody := "http://google.com to https://github.com to http://stackoverflow.com and http://google.com"
-	allURLs := []string{"http://google.com", "https://github.com", "http://stackoverflow.com", "http://google.com"}
+	messageBodyA := "http://google.com to https://github.com to http://stackoverflow.com and http://google.com/mail"
+	allURLsA := []string{"http://google.com", "https://github.com", "http://stackoverflow.com", "http://google.com/mail"}
 
-	newMessageBody := ReplaceMessageBodyURLs(messageBody, allURLs)
-	assert.Equal(t, "{URL} to {URL2} to {URL3} and {URL4}", newMessageBody, "they should be equal")
+	newMessageBodyA := ReplaceMessageBodyURLs(messageBodyA, allURLsA)
+	assert.Equal(t, "{URL} to {URL2} to {URL3} and {URL4}", newMessageBodyA, "they should be equal")
+	
+	messageBodyB := "google.com google.com/mail digima.com digima.com/らりるれる"
+	allURLsB := []string{"google.com", "google.com/mail", "digima.com", "digima.com/らりるれる"}
+	
+	newMessageBodyB := ReplaceMessageBodyURLs(messageBodyB, allURLsB)
+	assert.Equal(t, "{URL} {URL2} {URL3} {URL4}", newMessageBodyB, "they should be equal")
 }
