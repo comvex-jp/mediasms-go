@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/comvex-jp/mediasms-go/translations"
 
@@ -136,29 +138,77 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 	return response, nil
 }
 
+const (
+	URLRegex                = `(?:https?:\/\/)?[-\w@:%_+.~#?&=]{2,256}\.[a-z]{2,4}(?:[-\w@:%_\x{30A1}-\x{30FC}\p{Hiragana}\p{Han}}+.~#?&\/=,()\][|]*)?`
+	InvalidURLRegex         = `(?:[\w]+)(?:https?:\/\/)[-\w@:%_+.~#?&=]{2,256}\.[a-z]{2,4}(?:[-\w@:%_\x{30A1}-\x{30FC}\p{Hiragana}\p{Han}}+.~#?&\/=,()\][|]*)?`
+	PlaceholderBracketRegex = `\*\|(.*?)\|\*`
+)
+
+// ExtractURLsFromText finds and returns all urls
+func ExtractURLsFromText(t string) []string {
+	r := regexp.MustCompile(URLRegex)
+
+	return r.FindAllString(t, -1)
+}
+
+// ProcessAndExtractURLs removes placeholder brackets, invalidURLs and returns only valid URLs
+func ProcessAndExtractURLs(t string) []string {
+	placeholderOmitted := replaceElementsinPlaceholderBrackets(t, "")
+
+	invalidURLsOmittied := replaceInvalidURLsInText(placeholderOmitted, "")
+
+	return ExtractURLsFromText(invalidURLsOmittied)
+}
+
+// replaceElementsinPlaceholderBrackets find and replace anything between *||*
+func replaceElementsinPlaceholderBrackets(t, replacedWith string) string {
+	r := regexp.MustCompile(PlaceholderBracketRegex)
+
+	return r.ReplaceAllString(t, replacedWith)
+}
+
+// replaceInvalidURLsInText find and replace invalid URLs, e.g. aahttp://... 01http://...
+func replaceInvalidURLsInText(t, replaceWith string) string {
+	r := regexp.MustCompile(InvalidURLRegex)
+
+	return r.ReplaceAllString(t, replaceWith)
+}
+
+func split(r rune) bool {
+	return unicode.IsSpace(r)
+}
+
 // ReplaceMessageBodyURLs removes urls and replaces them with mediasms acceptable values
 func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
 	urlReplacements := []string{"{URL}", "{URL2}", "{URL3}", "{URL4}"}
-	
-	splitBody := strings.Split(messageBody, " ")
-	
+
+	splitBody := strings.FieldsFunc(messageBody, split)
+
 	urlHashmap := make(map[string]bool)
-	
+
 	for _, url := range allURLs {
 		urlHashmap[url] = true
 	}
-	
+
 	replacedMessageBody := []string{}
-	
+
 	replacementURLIndex := 0
-	
+
 	for _, w := range splitBody {
-		if _, ok := urlHashmap[w]; ok {
-			replacedMessageBody = append(replacedMessageBody, urlReplacements[replacementURLIndex])
-			replacementURLIndex += 1
-			continue
+		extractedURL := ProcessAndExtractURLs(w)
+
+		if len(ProcessAndExtractURLs(w)) == 1 {
+
+			if _, ok := urlHashmap[extractedURL[0]]; ok && replacementURLIndex != len(urlReplacements) {
+
+				replacement := strings.Replace(w, extractedURL[0], urlReplacements[replacementURLIndex], -1)
+				replacedMessageBody = append(replacedMessageBody, replacement)
+
+				replacementURLIndex += 1
+				continue
+			}
 		}
-		
+
 		replacedMessageBody = append(replacedMessageBody, w)
 	}
 
