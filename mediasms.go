@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -145,6 +144,7 @@ func split(r rune) bool {
 
 var URLReplacements = []string{"{URL}", "{URL2}", "{URL3}", "{URL4}"}
 
+// sortAndReverseURLS orders URLs from longest to shortest
 func sortAndReverseURLS(allURLs []string) []string {
 	sort.Strings(allURLs)
 
@@ -157,15 +157,14 @@ func sortAndReverseURLS(allURLs []string) []string {
 	return reversed
 }
 
+// findAndReplaceURL inserts a mediaSMS value {URL} in place of a standard URL
 func findAndReplaceURL(word string, index int, allURLs []string) string {
 	if index >= len(URLReplacements) {
 		return word
 	}
 
 	for _, url := range allURLs {
-		re := regexp.MustCompile(url)
-
-		replacement := re.ReplaceAllLiteralString(word, URLReplacements[index])
+		replacement := strings.Replace(word, url, URLReplacements[index], 1)
 
 		if replacement != word {
 			return replacement
@@ -181,15 +180,15 @@ func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
 
 	replacementURLIndex := 0
 
-	splitBody := strings.FieldsFunc(messageBody, split)
+	splitMessageBody := strings.FieldsFunc(messageBody, split)
 
 	reversedURLs := sortAndReverseURLS(allURLs)
 
-	for _, w := range splitBody {
+	for _, word := range splitMessageBody {
 
-		updatedWord := findAndReplaceURL(w, replacementURLIndex, reversedURLs)
+		updatedWord := findAndReplaceURL(word, replacementURLIndex, reversedURLs)
 
-		if updatedWord != w {
+		if updatedWord != word {
 			replacementURLIndex += 1
 		}
 
