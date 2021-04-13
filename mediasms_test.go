@@ -3,7 +3,7 @@ package mediasms
 import (
 	"testing"
 
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestReplaceMessageBodyURLs(t *testing.T) {
