@@ -35,33 +35,6 @@ func createSMSID(prefix, messageID string) string {
 // SMSURL constant for sms-console
 const SMSURL = "https://www.sms-console.jp/"
 
-// makeRequest is a generic handler for api calls
-func (c Client) makeRequest(requestMethod, url string, body interface{}) ([]byte, error) {
-	httpClient := &http.Client{}
-
-	jsonValue, _ := json.Marshal(body)
-
-	req, _ := http.NewRequest(requestMethod, url, bytes.NewBuffer(jsonValue))
-	req.SetBasicAuth(c.Username, c.Password)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := httpClient.Do(req)
-
-	if err != nil {
-		return jsonValue, err
-	}
-
-	defer resp.Body.Close()
-
-	responseBody, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		return responseBody, err
-	}
-
-	return responseBody, nil
-}
-
 // Send request to media4u
 func (c Client) Send(messageID string, val models.BuildRequest) (models.APIResponse, error) {
 	smsID := createSMSID(c.Prefix, messageID)
@@ -138,11 +111,31 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 	return response, nil
 }
 
-func split(r rune) bool {
-	return unicode.IsSpace(r)
-}
-
 var URLReplacements = []string{"{URL}", "{URL2}", "{URL3}", "{URL4}"}
+
+// ReplaceMessageBodyURLs removes urls and replaces them with mediasms acceptable values
+func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
+	replacedMessageBody := []string{}
+
+	replacementURLIndex := 0
+
+	splitMessageBody := strings.FieldsFunc(messageBody, split)
+
+	reversedURLs := sortAndReverseURLS(allURLs)
+
+	for _, word := range splitMessageBody {
+
+		updatedWord := findAndReplaceURL(word, replacementURLIndex, reversedURLs)
+
+		if updatedWord != word {
+			replacementURLIndex += 1
+		}
+
+		replacedMessageBody = append(replacedMessageBody, updatedWord)
+	}
+
+	return strings.Join(replacedMessageBody, " ")
+}
 
 // sortAndReverseURLS orders URLs from longest to shortest
 func sortAndReverseURLS(allURLs []string) []string {
@@ -174,26 +167,33 @@ func findAndReplaceURL(word string, index int, allURLs []string) string {
 	return word
 }
 
-// ReplaceMessageBodyURLs removes urls and replaces them with mediasms acceptable values
-func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
-	replacedMessageBody := []string{}
+func split(r rune) bool {
+	return unicode.IsSpace(r)
+}
 
-	replacementURLIndex := 0
+// makeRequest is a generic handler for api calls
+func (c Client) makeRequest(requestMethod, url string, body interface{}) ([]byte, error) {
+	httpClient := &http.Client{}
 
-	splitMessageBody := strings.FieldsFunc(messageBody, split)
+	jsonValue, _ := json.Marshal(body)
 
-	reversedURLs := sortAndReverseURLS(allURLs)
+	req, _ := http.NewRequest(requestMethod, url, bytes.NewBuffer(jsonValue))
+	req.SetBasicAuth(c.Username, c.Password)
+	req.Header.Set("Content-Type", "application/json")
 
-	for _, word := range splitMessageBody {
+	resp, err := httpClient.Do(req)
 
-		updatedWord := findAndReplaceURL(word, replacementURLIndex, reversedURLs)
-
-		if updatedWord != word {
-			replacementURLIndex += 1
-		}
-
-		replacedMessageBody = append(replacedMessageBody, updatedWord)
+	if err != nil {
+		return jsonValue, err
 	}
 
-	return strings.Join(replacedMessageBody, " ")
+	defer resp.Body.Close()
+
+	responseBody, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		return responseBody, err
+	}
+
+	return responseBody, nil
 }
