@@ -167,6 +167,7 @@ func findAndReplaceURL(word string, index int, allURLs []string) string {
 	return word
 }
 
+// split tells us if the passed in rune is any kind of space
 func split(r rune) bool {
 	return unicode.IsSpace(r)
 }
