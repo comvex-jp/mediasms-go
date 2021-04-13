@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -138,78 +139,61 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 	return response, nil
 }
 
-const (
-	URLRegex                = `(?:https?:\/\/)?[-\w@:%_+.~#?&=]{2,256}\.[a-z]{2,4}(?:[-\w@:%_\x{30A1}-\x{30FC}\p{Hiragana}\p{Han}}+.~#?&\/=,()\][|]*)?`
-	InvalidURLRegex         = `(?:[\w]+)(?:https?:\/\/)[-\w@:%_+.~#?&=]{2,256}\.[a-z]{2,4}(?:[-\w@:%_\x{30A1}-\x{30FC}\p{Hiragana}\p{Han}}+.~#?&\/=,()\][|]*)?`
-	PlaceholderBracketRegex = `\*\|(.*?)\|\*`
-)
-
-// ExtractURLsFromText finds and returns all urls
-func ExtractURLsFromText(t string) []string {
-	r := regexp.MustCompile(URLRegex)
-
-	return r.FindAllString(t, -1)
-}
-
-// ProcessAndExtractURLs removes placeholder brackets, invalidURLs and returns only valid URLs
-func ProcessAndExtractURLs(t string) []string {
-	placeholderOmitted := replaceElementsinPlaceholderBrackets(t, "")
-
-	invalidURLsOmittied := replaceInvalidURLsInText(placeholderOmitted, "")
-
-	return ExtractURLsFromText(invalidURLsOmittied)
-}
-
-// replaceElementsinPlaceholderBrackets find and replace anything between *||*
-func replaceElementsinPlaceholderBrackets(t, replacedWith string) string {
-	r := regexp.MustCompile(PlaceholderBracketRegex)
-
-	return r.ReplaceAllString(t, replacedWith)
-}
-
-// replaceInvalidURLsInText find and replace invalid URLs, e.g. aahttp://... 01http://...
-func replaceInvalidURLsInText(t, replaceWith string) string {
-	r := regexp.MustCompile(InvalidURLRegex)
-
-	return r.ReplaceAllString(t, replaceWith)
-}
-
 func split(r rune) bool {
 	return unicode.IsSpace(r)
 }
 
-// ReplaceMessageBodyURLs removes urls and replaces them with mediasms acceptable values
-func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
-	urlReplacements := []string{"{URL}", "{URL2}", "{URL3}", "{URL4}"}
+var URLReplacements = []string{"{URL}", "{URL2}", "{URL3}", "{URL4}"}
 
-	splitBody := strings.FieldsFunc(messageBody, split)
+func sortAndReverseURLS(allURLs []string) []string {
+	sort.Strings(allURLs)
 
-	urlHashmap := make(map[string]bool)
+	reversed := []string{}
 
 	for _, url := range allURLs {
-		urlHashmap[url] = true
+		reversed = append([]string{url}, reversed...)
 	}
 
+	return reversed
+}
+
+func findAndReplaceURL(word string, index int, allURLs []string) string {
+	if index >= len(URLReplacements) {
+		return word
+	}
+
+	for _, url := range allURLs {
+		re := regexp.MustCompile(url)
+
+		replacement := re.ReplaceAllLiteralString(word, URLReplacements[index])
+
+		if replacement != word {
+			return replacement
+		}
+	}
+
+	return word
+}
+
+// ReplaceMessageBodyURLs removes urls and replaces them with mediasms acceptable values
+func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
 	replacedMessageBody := []string{}
 
 	replacementURLIndex := 0
 
+	splitBody := strings.FieldsFunc(messageBody, split)
+
+	reversedURLs := sortAndReverseURLS(allURLs)
+
 	for _, w := range splitBody {
-		extractedURL := ProcessAndExtractURLs(w)
 
-		if len(ProcessAndExtractURLs(w)) == 1 {
+		updatedWord := findAndReplaceURL(w, replacementURLIndex, reversedURLs)
 
-			if _, ok := urlHashmap[extractedURL[0]]; ok && replacementURLIndex != len(urlReplacements) {
-
-				replacement := strings.Replace(w, extractedURL[0], urlReplacements[replacementURLIndex], -1)
-				replacedMessageBody = append(replacedMessageBody, replacement)
-
-				replacementURLIndex += 1
-				continue
-			}
+		if updatedWord != w {
+			replacementURLIndex += 1
 		}
 
-		replacedMessageBody = append(replacedMessageBody, w)
+		replacedMessageBody = append(replacedMessageBody, updatedWord)
 	}
 
 	return strings.Join(replacedMessageBody, " ")
