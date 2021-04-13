@@ -3,7 +3,7 @@ package mediasms
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"gotest.tools/assert"
 )
 
 func TestReplaceMessageBodyURLs(t *testing.T) {
@@ -37,11 +37,5 @@ func TestReplaceMessageBodyURLs(t *testing.T) {
 	allURLsE := []string{"digima.com", "digima.com/さしすせそ", "http://www.digima.com/test"}
 
 	newMessageBodyE := ReplaceMessageBodyURLs(messageBodyE, allURLsE)
-	assert.Equal(t, "の{URL} たちつてと の{URL2} の{URL3}", newMessageBodyE, "they should be equal")
-
-	messageBodyF := "のdigima.com/さしすせそ　たちつてと　のdigima.com　のhttp://www.digima.com/test"
-	allURLsF := []string{"digima.com", "digima.com/さしすせそ", "http://www.digima.com/test"}
-
-	newMessageBodyF := ReplaceMessageBodyURLs(messageBodyF, allURLsF)
-	assert.Equal(t, "の{URL} たちつてと の{URL2} の{URL3}", newMessageBodyF, "they should be equal")
+	assert.Equal(t, "の{URL}　たちつてと　の{URL2}　の{URL3}", newMessageBodyE, "they should be equal")
 }

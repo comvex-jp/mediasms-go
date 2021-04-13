@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/comvex-jp/mediasms-go/translations"
 
@@ -115,61 +114,28 @@ var URLReplacements = []string{"{URL}", "{URL2}", "{URL3}", "{URL4}"}
 
 // ReplaceMessageBodyURLs removes urls and replaces them with mediasms acceptable values
 func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
-	replacedMessageBody := []string{}
+	originalLinkOrder := make(map[string]int)
 
-	replacementURLIndex := 0
-
-	splitMessageBody := strings.FieldsFunc(messageBody, split)
-
-	reversedURLs := sortAndReverseURLS(allURLs)
-
-	for _, word := range splitMessageBody {
-
-		updatedWord := findAndReplaceURL(word, replacementURLIndex, reversedURLs)
-
-		if updatedWord != word {
-			replacementURLIndex += 1
-		}
-
-		replacedMessageBody = append(replacedMessageBody, updatedWord)
+	for i, url := range allURLs {
+		originalLinkOrder[url] = i
 	}
 
-	return strings.Join(replacedMessageBody, " ")
+	for _, url := range sortURLsByLength(allURLs) {
+		i := originalLinkOrder[url]
+
+		messageBody = strings.Replace(messageBody, url, URLReplacements[i], 1)
+	}
+
+	return messageBody
 }
 
-// sortAndReverseURLS orders URLs from longest to shortest
-func sortAndReverseURLS(allURLs []string) []string {
-	sort.Strings(allURLs)
+// sortURLsByLength orders URLs from longest to shortest
+func sortURLsByLength(allURLs []string) []string {
+	sort.Slice(allURLs, func(i, j int) bool {
+		return len(allURLs[i]) > len(allURLs[j])
+	})
 
-	reversed := []string{}
-
-	for _, url := range allURLs {
-		reversed = append([]string{url}, reversed...)
-	}
-
-	return reversed
-}
-
-// findAndReplaceURL inserts a mediaSMS value {URL} in place of a standard URL
-func findAndReplaceURL(word string, index int, allURLs []string) string {
-	if index >= len(URLReplacements) {
-		return word
-	}
-
-	for _, url := range allURLs {
-		replacement := strings.Replace(word, url, URLReplacements[index], 1)
-
-		if replacement != word {
-			return replacement
-		}
-	}
-
-	return word
-}
-
-// split tells us if the passed in rune is any kind of space
-func split(r rune) bool {
-	return unicode.IsSpace(r)
+	return allURLs
 }
 
 // makeRequest is a generic handler for api calls
