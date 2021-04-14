@@ -123,7 +123,7 @@ func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
 	for _, url := range sortURLsByLength(allURLs) {
 		i := originalLinkOrder[url]
 
-		messageBody = strings.Replace(messageBody, url, URLReplacements[i], 1)
+		messageBody = strings.ReplaceAll(messageBody, url, URLReplacements[i])
 	}
 
 	return messageBody

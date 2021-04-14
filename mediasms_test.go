@@ -23,7 +23,7 @@ func TestReplaceMessageBodyURLs(t *testing.T) {
 	allURLsC := []string{"http://google.com", "https://github.com", "http://stackoverflow.com", "http://google.com/mail"}
 
 	newMessageBodyC := ReplaceMessageBodyURLs(messageBodyC, allURLsC)
-	assert.Equal(t, "{URL} to {URL2} to {URL3} and {URL4} http://google.com", newMessageBodyC, "they should be equal")
+	assert.Equal(t, "{URL} to {URL2} to {URL3} and {URL4} {URL}", newMessageBodyC, "they should be equal")
 
 	// English space
 	messageBodyD := "のdigima.com たちつてと のdigima.com/さしすせそ のhttp://www.digima.com/test"
