@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -33,39 +34,6 @@ func createSMSID(prefix, messageID string) string {
 
 // SMSURL constant for sms-console
 const SMSURL = "https://www.sms-console.jp/"
-
-// makeRequest is a generic handler for api calls
-func (c Client) makeRequest(requestMethod, url string, body interface{}) ([]byte, error) {
-	httpClient := &http.Client{}
-	
-	// If mocking is enabled, override transport
-	// so that we can mock the response data
-	if c.EnableMock {
-		httpClient = &http.Client{Transport: httpmock.DefaultTransport}
-	}
-
-	jsonValue, _ := json.Marshal(body)
-
-	req, _ := http.NewRequest(requestMethod, url, bytes.NewBuffer(jsonValue))
-	req.SetBasicAuth(c.Username, c.Password)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := httpClient.Do(req)
-
-	if err != nil {
-		return jsonValue, err
-	}
-
-	defer resp.Body.Close()
-
-	responseBody, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		return responseBody, err
-	}
-
-	return responseBody, nil
-}
 
 // Send request to media4u
 func (c Client) Send(messageID string, val models.BuildRequest) (models.APIResponse, error) {
@@ -143,14 +111,57 @@ func (c Client) GetStatus(messageID string) (models.APIResponse, error) {
 	return response, nil
 }
 
+var URLReplacements = []string{"{URL}", "{URL2}", "{URL3}", "{URL4}"}
+
 // ReplaceMessageBodyURLs removes urls and replaces them with mediasms acceptable values
 func ReplaceMessageBodyURLs(messageBody string, allURLs []string) string {
-	urlReplacements := []string{"{URL}", "{URL2}", "{URL3}", "{URL4}"}
+	originalLinkOrder := make(map[string]int)
 
-	for i := range allURLs {
-		// Replace all matching urls
-		messageBody = strings.ReplaceAll(messageBody, allURLs[i], urlReplacements[i])
+	for i, url := range allURLs {
+		originalLinkOrder[url] = i
+	}
+
+	for _, url := range sortURLsByLength(allURLs) {
+		i := originalLinkOrder[url]
+
+		messageBody = strings.ReplaceAll(messageBody, url, URLReplacements[i])
 	}
 
 	return messageBody
+}
+
+// sortURLsByLength orders URLs from longest to shortest
+func sortURLsByLength(allURLs []string) []string {
+	sort.Slice(allURLs, func(i, j int) bool {
+		return len(allURLs[i]) > len(allURLs[j])
+	})
+
+	return allURLs
+}
+
+// makeRequest is a generic handler for api calls
+func (c Client) makeRequest(requestMethod, url string, body interface{}) ([]byte, error) {
+	httpClient := &http.Client{}
+
+	jsonValue, _ := json.Marshal(body)
+
+	req, _ := http.NewRequest(requestMethod, url, bytes.NewBuffer(jsonValue))
+	req.SetBasicAuth(c.Username, c.Password)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
+
+	if err != nil {
+		return jsonValue, err
+	}
+
+	defer resp.Body.Close()
+
+	responseBody, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		return responseBody, err
+	}
+
+	return responseBody, nil
 }
