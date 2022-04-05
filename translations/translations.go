@@ -12,7 +12,7 @@ var TranslationMap = map[int]string{
 	5:  models.StatusFailedInvalidPhoneNumber,
 	7:  models.StatusFailedAuOutOfServiceArea,
 	8:  models.StatusFailedAuNwFailure,
-	9:  models.StatusFailedAuNwFailure,
+	9:  models.StatusFailedAuNwOther,
 	10: models.StatusFailedAuNotPaid,
 	11: models.StatusProcessing,
 	12: models.StatusFailedAuOther,
@@ -45,6 +45,6 @@ var TranslationMap = map[int]string{
 	39: models.StatusApprovalPending,
 	40: models.StatusFailedRakutenOther,
 	41: models.StatusFailedRakutenNwMalfunction,
-	42: models.StatusFailedDocomoPartialReception,
+	42: models.StatusFailedRakutenPartialReception,
 	43: models.StatusFailedRakutenOutOfServiceArea,
 }
